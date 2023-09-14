@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Выбор автомобиля</title>
+</head>
+<body class="body">
+<h1 class="logo">DriveZone</h1>
+
+<div class="start-picker" id="div_start">
+  <label for="start-time">Начало аренды:</label>
+  <input type="datetime-local" id="start-time" name="start-time" required>
+</div>
+
+<div class="end-picker" style="display: none;" id="div_end">
+  <label for="end-time">Окончание аренды:</label>
+  <input type="datetime-local" id="end-time" name="end-time" required>
+</div>
+
+<div class="search-button" style="display: none;" id="div_btn">
+  <button id="searchButton">Поиск</button>
+</div>
+
+<div id="carList"></div>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+  // Ваши данные о машинах
+  var carData = [];
+  let tg = window.Telegram.WebApp;
+  tg.expand();
+
+  const divEnd = document.getElementById('div_end');
+  const divBtn = document.getElementById('div_btn');
+  const startPicker = document.getElementById('start-time')
+  const endPicker = document.getElementById('end-time')
+
+  // Добавляем обработчик события на выбор времени в start-picker
+  startPicker.addEventListener('change', function () {
+    // Получаем значение выбранной даты и времени в start-picker
+    const startValue = new Date(startPicker.value);
+
+    // Устанавливаем минимальное значение в end-picker равным выбранной дате и времени в start-picker
+    endPicker.min = startValue.toISOString().slice(0, -8);
+  });
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const currentDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+
+  document.getElementById('start-time').setAttribute('min', currentDateTime);
+
+
+
+  startPicker.addEventListener('change', function () {
+    // Проверяем, что выбрано значение в start-picker
+    if (startPicker.value !== '') {
+      // Если выбрано значение, отображаем end-picker и его метку
+      divEnd.style.display = 'block';
+    } else {
+      // Если значение не выбрано, скрываем end-picker и его метку, а также search-button
+      divEnd.style.display = 'none';
+      searchButton.style.display = 'none';
+    }
+  });
+
+  endPicker.addEventListener('change', function () {
+    // Проверяем, что выбрано значение в start-picker
+    if (endPicker.value !== '') {
+      // Если выбрано значение, отображаем end-picker и его метку
+      divBtn.style.display = 'block';
+    } else {
+      // Если значение не выбрано, скрываем end-picker и его метку, а также search-button
+      divBtn.style.display = 'none';
+    }
+  });
+
+
+  // Функция для отображения карточек машин
+  function displayCars() {
+    var carList = document.getElementById("carList");
+    carList.innerHTML = ""; // Очищаем список перед отображением новых данных
+
+    carData.forEach(function(car) {
+      var carCard = document.createElement("div");
+      carCard.className = "car-card";
+      carCard.innerHTML = `
+                    <img src="${car.photo}" alt="${car.name}">
+                    <h2>${car.name}</h2>
+                    <p>${car.description}</p>
+                    <p>от ${car.price_15} руб/сутки</p>
+                `;
+      const pickButton = document.createElement('button');
+      pickButton.textContent = "Выбрать";
+      pickButton.classList.add("pick-button")
+
+      pickButton.addEventListener("click", function(){
+        const startTime = document.getElementById("start-time").value;
+        const endTime = document.getElementById("end-time").value;
+        let data = {
+          plate: car.plate,
+          start_date_time: startTime,
+          end_date_time: endTime
+        }
+        tg.sendData(car.plate + ';' + startTime + ';' + endTime);
+        tg.close();
+      })
+
+      carCard.appendChild(pickButton)
+      carList.appendChild(carCard);
+    });
+  }
+
+  // Обработчик события для кнопки "Поиск"
+  var searchButton = document.getElementById("searchButton");
+  searchButton.addEventListener("click", function() {
+    // Отправка POST-запроса к серверу
+    fetch('https://lartem456.fvds.ru:3000/search', {
+      //mode: 'no-cors',
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+            .then(response => {
+              // Проверка статуса ответа
+              if (!response.ok) {
+                throw new Error('Ошибка HTTP: ' + response.status);
+              }
+
+              // Преобразование ответа в JSON
+              return response.json();
+            })
+            .then(data => {
+              // Обработка данных
+              carData = data
+              console.log(data);
+              displayCars()
+            })
+            .catch(error => {
+              // Обработка ошибок
+              console.error('Произошла ошибка:', error);
+            });
+  });
+</script>
+
+
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Geologica&family=Montserrat:wght@500&display=swap');
+  /* Стилизация карточек машин (можно настроить по своему вкусу) */
+  .car-card {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px;
+  }
+
+  /* Стилизация изображений в карточках */
+  .car-card img {
+    max-width: 100%;
+    height: auto;
+    max-height: 500px; /* Ограничение высоты, чтобы сохранить соотношение сторон */
+    border-radius: 10px;
+  }
+
+  /* Стилизация списка карточек машин */
+  .car-card {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    border-radius: 10px;
+    padding-top: 5px;
+    border-color: black;
+    /*display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;  Выравнивание элементов по горизонтали */
+  }
+
+  .car-card h2 {
+    margin-bottom: 0px;
+    margin-top: 5px;
+  }
+
+  .car-card p {
+    margin-top: 5px;
+  }
+
+  .start-picker{
+    padding-bottom: 10px;
+  }
+
+  .body {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    color: var(--tg-theme-text-color);
+    background: var(--tg-theme-bg-color);
+  }
+
+  .search-button {
+    background-color: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+    width: 100%;
+  }
+
+  .logo{
+    text-align: center;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+  }
+
+  .pick-button {
+    background-color: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+    padding: 10px 20px;
+    width: 100%;
+    border-radius: 10px;
+  }
+
+</style>
+</body>
+</html>
