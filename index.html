@@ -42,6 +42,7 @@
     const startValue = new Date(startPicker.value);
 
     // Устанавливаем минимальное значение в end-picker равным выбранной дате и времени в start-picker
+    startValue.setDate(startValue.getDate() + 1);
     endPicker.min = startValue.toISOString().slice(0, -8);
   });
 
