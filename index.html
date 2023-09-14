@@ -19,8 +19,9 @@
 </div>
 
 <div class="search-button" style="display: none;" id="div_btn">
-  <button id="searchButton">Поиск</button>
+  <button id="searchButton" class="full-width-button">Поиск</button>
 </div>
+
 
 <div id="carList"></div>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -55,14 +56,12 @@
   document.getElementById('start-time').setAttribute('min', currentDateTime);
 
 
-
   startPicker.addEventListener('change', function () {
     // Проверяем, что выбрано значение в start-picker
     if (startPicker.value !== '') {
       // Если выбрано значение, отображаем end-picker и его метку
       divEnd.style.display = 'block';
     } else {
-      // Если значение не выбрано, скрываем end-picker и его метку, а также search-button
       divEnd.style.display = 'none';
       searchButton.style.display = 'none';
     }
@@ -74,7 +73,6 @@
       // Если выбрано значение, отображаем end-picker и его метку
       divBtn.style.display = 'block';
     } else {
-      // Если значение не выбрано, скрываем end-picker и его метку, а также search-button
       divBtn.style.display = 'none';
     }
   });
@@ -192,6 +190,10 @@
     padding-bottom: 10px;
   }
 
+  .end-picker{
+    padding-bottom: 15px;
+  }
+
   .body {
     font-family: 'Montserrat', sans-serif;
     font-weight: 500;
@@ -200,8 +202,7 @@
   }
 
   .search-button {
-    background-color: var(--tg-theme-button-color);
-    color: var(--tg-theme-button-text-color);
+
   }
 
   .logo{
@@ -215,8 +216,19 @@
     color: var(--tg-theme-button-text-color);
     padding: 10px 20px;
     width: 100%;
-    border-radius: 10px;
+    border-radius: 20px;
+    font-family: 'Montserrat', sans-serif;
   }
+
+  .full-width-button {
+    background-color: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+    width: 100%;
+    height: 40px;
+    border-radius: 20px;
+    font-family: 'Montserrat', sans-serif;
+  }
+
 
 </style>
 </body>
